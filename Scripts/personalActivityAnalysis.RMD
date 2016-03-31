@@ -1,0 +1,120 @@
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+#Load required packages
+```{r}
+#setwd("C:/Users/Hadrien/Dropbox/Coursera Data Science/reproducibleResearch/assignment1/RepData_PeerAssessment1-master")
+getwd()
+library(ggplot2)
+library(plyr)
+library(mice) #used to impute missing values
+library(chron)
+library(cowplot)#needed to graph multiple plots
+
+```
+
+
+## Loading and preprocessing the data
+```{r}
+df <- read.csv('Data/activity.csv') #Load Data
+df2 <- df[!is.na(df$steps), ] #remove NAs
+df2_summarized <- ddply(df2, c("date"), summarize, sumSteps = sum(steps)) #summarize
+
+```
+
+
+
+## What is mean total number of steps taken per day?
+```{r}
+#plot results
+ggplot(data=df2_summarized, mapping = aes(x=date, y=sumSteps)) +
+  geom_bar(stat="identity", fill = 'blue') +
+  theme(axis.text.x = element_text(angle = 90)) + #rotate x axis labels
+  ggtitle('Steps Per Day') +
+  theme(plot.title = element_text(face='bold', size=16))
+
+#Calculate mean & median
+mean(df2_summarized$sumSteps, na.rm = TRUE)
+median(df2_summarized$sumSteps, na.rm = TRUE)
+
+```
+
+
+
+## What is the average daily activity pattern?
+```{r}
+ggplot(data=df2, aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Avg Steps Per 5 Minute Interval') +
+  theme(plot.title = element_text(face='bold', size=16)) 
+
+avg_steps_by_interval <- ddply(df2, c("interval"), summarize, avgSteps = sum(steps)) #summarize
+
+#Print busiest time
+busiestInterval <- (avg_steps_by_interval$interval[avg_steps_by_interval$avgSteps == max(avg_steps_by_interval$avgSteps, na.rm = T)])
+
+```
+
+
+## Imputing missing values
+```{r}
+sum(is.na(df$steps)) #calculate sum of NAs
+tempData <- mice(df, seed = 500) #impute missing values
+df3 <- complete(tempData, 1)
+df3_summarized <- ddply(df3, c("date"), summarize, sumSteps = sum(steps)) #summarize
+
+#Plot new data set
+ggplot(data=df3_summarized, mapping = aes(x=date, y=sumSteps)) +
+  geom_bar(stat="identity", fill = 'blue') +
+  theme(axis.text.x = element_text(angle = 90)) + #rotate x axis labels
+  ggtitle('Steps Per Day (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16))
+
+ggplot(data=df3, aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Avg Steps Per 5 Minute Interval (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16)) 
+
+#Calculate mean & median
+mean(df3_summarized$sumSteps, na.rm = TRUE)
+median(df3_summarized$sumSteps, na.rm = TRUE)
+
+
+```
+
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+df3$weekend <- is.weekend(df3$date)
+for (i in 1:nrow(df3)) {
+
+  if (df3$weekend[i] == TRUE) {
+    df3$dayType[i] <- 'weekend'
+  } else {
+    df3$dayType[i] <- 'weekday'
+  }
+}
+
+plot_weekend <- ggplot(data=subset(df3, dayType == 'weekend'), aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Weekend Avg Steps Per 5 Minute Interval (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16)) 
+
+plot_weekday <- ggplot(data=subset(df3, dayType == 'weekday'), aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Weekday Avg Steps Per 5 Minute Interval (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16)) 
+
+png('figures/final_figure.png')
+plot_grid(plot_weekday, plot_weekend, ncol = 1, nrow=2)
+dev.off()
+```
+
+

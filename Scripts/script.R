@@ -9,6 +9,7 @@ library(ggplot2)
 library(plyr)
 library(mice) #used to impute missing values
 library(chron)
+library(cowplot)#needed to graph multiple plots
 
 df <- read.csv('Data/activity.csv') #Load Data
 
@@ -74,20 +75,19 @@ for (i in 1:nrow(df3)) {
   } else {
     df3$dayType[i] <- 'weekday'
   }
-
 }
 
-#   if (is.weekend(df3$date[i])) {
-#     
-#     df3$dayType[i] <- as.factor('weekend')
-#     
-#   } else {
-#     
-#     df3$dayType[i] <- as.factor('weekday')
-#   }
+plot_weekend <- ggplot(data=subset(df3, dayType == 'weekend'), aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Weekend Avg Steps Per 5 Minute Interval (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16)) 
 
+plot_weekday <- ggplot(data=subset(df3, dayType == 'weekday'), aes(interval, steps)) +
+  stat_summary(fun.y = mean, geom = 'line') +
+  ggtitle('Weekday Avg Steps Per 5 Minute Interval (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16)) 
 
-
+plot_grid(plot_weekday, plot_weekend, ncol = 1, nrow=2)
 
 
 
