@@ -5,7 +5,7 @@ COURSERA REVIEWER: please see figures folder if the plots do not display in your
 Connect with me on Linkedin: https://www.linkedin.com/in/hadrien-dykiel-29a78432
 
 #Set up R environment
-Set working directory and load requried packages.
+Set working directory and load requried packages, etc.
 ```{r}
 library(ggplot2)
 library(plyr)
