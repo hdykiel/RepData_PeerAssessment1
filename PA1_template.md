@@ -1,25 +1,20 @@
 # Reproducible Research: Peer Assessment 1
+COURSERA REVIEWER: please see figures folder if the plots do not display in your browser. Thanks!
+Connect with me on Linkedin: https://www.linkedin.com/in/hadrien-dykiel-29a78432
+
 #Set up R environment
-Set working directory and load requried packages.
+Set working directory and load requried packages, etc.
 
 ```r
-#setwd("C:/Users/Hadrien/Dropbox/Coursera Data Science/reproducibleResearch/assignment1/RepData_PeerAssessment1-master")
 library(ggplot2)
 ```
 
 ```
-## Warning: package 'ggplot2' was built under R version 3.2.3
+## Warning: package 'ggplot2' was built under R version 3.2.4
 ```
 
 ```r
 library(plyr)
-```
-
-```
-## Warning: package 'plyr' was built under R version 3.2.3
-```
-
-```r
 library(mice) #used to impute missing values
 ```
 
@@ -32,22 +27,11 @@ library(mice) #used to impute missing values
 ```
 
 ```
-## Warning: package 'Rcpp' was built under R version 3.2.3
-```
-
-```
 ## mice 2.25 2015-11-09
 ```
 
 ```r
 library(chron)
-```
-
-```
-## Warning: package 'chron' was built under R version 3.2.3
-```
-
-```r
 library(cowplot)#needed to graph multiple plots
 ```
 
@@ -113,7 +97,7 @@ hist
 ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 Plot total number of steps per date (out of curiousity, not part of assignment)
 
@@ -126,7 +110,7 @@ ggplot(data=df2_summarized, mapping = aes(x=date, y=sumSteps)) +
   theme(plot.title = element_text(face='bold', size=16))
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ```r
 #Calculate mean & median
@@ -139,22 +123,20 @@ The mean number of steps is 1.0766189\times 10^{4} and the median is 10765.
 ## What is the average daily activity pattern?
 
 ```r
-timeSeries<- ggplot(data=df2, aes(interval, steps)) +
-  stat_summary(fun.y = mean, geom = 'line') +
+timeSeries <- ggplot(data=df2, aes(interval, steps)) +
+  stat_summary(fun.y = 'mean', geom = 'line') +
   ggtitle('Avg Steps Per 5 Minute Interval') +
-  theme(plot.title = element_text(face='bold', size=16)) 
+  theme(plot.title = element_text(face='bold', size=16))
 
+timeSeries #print plot
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+```r
 #save to figures folder
 png('figures/activityPattern.png', width=1000)
 timeSeries
-```
-
-```
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-```
-
-```r
 dev.off()
 ```
 
@@ -164,26 +146,16 @@ dev.off()
 ```
 
 ```r
-#print plot
-timeSeries
-```
-
-```
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)
-
-```r
 avg_steps_by_interval <- ddply(df2, c("interval"), summarize, avgSteps = sum(steps)) #summarize
 
 #Print busiest time
 busiestInterval <- (avg_steps_by_interval$interval[avg_steps_by_interval$avgSteps == max(avg_steps_by_interval$avgSteps, na.rm = T)])
 ```
 
+The busiest interval is 835.
 
-## Imputing missing values
+## Impute missing values and re-plot results
+We'll use the mice package that imputes missing values with plausible values "drawn from a distribution specifically designed for each missing datapoint"(http://www.r-bloggers.com/imputing-missing-data-with-r-mice-package/).
 
 ```r
 sum(is.na(df$steps)) #calculate sum of NAs
@@ -228,26 +200,23 @@ tempData <- mice(df, seed = 500) #impute missing values
 ```
 
 ```r
-df3 <- complete(tempData, 1)
+df3 <- complete(tempData, 1) 
 df3_summarized <- ddply(df3, c("date"), summarize, sumSteps = sum(steps)) #summarize
 
-#Plot new data set
-bar_plot <- ggplot(data=df3_summarized, mapping = aes(x=date, y=sumSteps)) +
-  geom_bar(stat="identity", fill = 'blue') +
-  theme(axis.text.x = element_text(angle = 90)) + #rotate x axis labels
-  ggtitle('Steps Per Day (Imputed)') +
-  theme(plot.title = element_text(face='bold', size=16))
+hist3 <- qplot(df3_summarized$sumSteps,
+      xlab='Total Steps Each Day (Imputed)',
+      ylab='Frequency')
 
-#Print plot
-bar_plot
+#save to figures folder
+png('figures/totalStepsPerDayImputed.png', width=1000)
+hist3
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
 
 ```r
-#Save plot to figures folder
-png('figures/totalStepsPerDayImputed.png', width=1000)
-bar_plot
 dev.off()
 ```
 
@@ -257,37 +226,42 @@ dev.off()
 ```
 
 ```r
+#print plot
+hist3
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+```r
+#Plot steps per day
+ggplot(data=df3_summarized, mapping = aes(x=date, y=sumSteps)) +
+  geom_bar(stat="identity", fill = 'blue') +
+  theme(axis.text.x = element_text(angle = 90)) + #rotate x axis labels
+  ggtitle('Steps Per Day (Imputed)') +
+  theme(plot.title = element_text(face='bold', size=16))
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-2.png)<!-- -->
+
+```r
 ggplot(data=df3, aes(interval, steps)) +
-  stat_summary(fun.y = mean, geom = 'line') +
+  stat_summary(fun.y = 'mean', geom = 'line') +
   ggtitle('Avg Steps Per 5 Minute Interval (Imputed)') +
   theme(plot.title = element_text(face='bold', size=16)) 
 ```
 
-```
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-6-2.png)
+![](PA1_template_files/figure-html/unnamed-chunk-6-3.png)<!-- -->
 
 ```r
 #Calculate mean & median
-mean(df3_summarized$sumSteps, na.rm = TRUE)
+mean_imputed <- mean(df3_summarized$sumSteps, na.rm = TRUE)
+median_imputed <- median(df3_summarized$sumSteps, na.rm = TRUE)
 ```
-
-```
-## [1] 10911.26
-```
-
-```r
-median(df3_summarized$sumSteps, na.rm = TRUE)
-```
-
-```
-## [1] 11042
-```
-
-
+After imputation, the new mean and median are ` r mean_imputed` and 11352, respectively.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -304,29 +278,18 @@ for (i in 1:nrow(df3)) {
 }
 
 plot_weekend <- ggplot(data=subset(df3, dayType == 'weekend'), aes(interval, steps)) +
-  stat_summary(fun.y = mean, geom = 'line') +
+  stat_summary(fun.y = 'mean', geom = 'line') +
   ggtitle('Weekend Avg Steps Per 5 Minute Interval (Imputed)') +
   theme(plot.title = element_text(face='bold', size=16)) 
 
 plot_weekday <- ggplot(data=subset(df3, dayType == 'weekday'), aes(interval, steps)) +
-  stat_summary(fun.y = mean, geom = 'line') +
+  stat_summary(fun.y = 'mean', geom = 'line') +
   ggtitle('Weekday Avg Steps Per 5 Minute Interval (Imputed)') +
   theme(plot.title = element_text(face='bold', size=16)) 
 
 #Save plot to figures folder
 png('figures/final_figure.png')
 plot_grid(plot_weekday, plot_weekend, ncol = 1, nrow=2)
-```
-
-```
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-```
-
-```r
 dev.off()
 ```
 
@@ -340,14 +303,6 @@ dev.off()
 plot_grid(plot_weekday, plot_weekend, ncol = 1, nrow=2)
 ```
 
-```
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-
-## Warning: Computation failed in `stat_summary()`:
-## 'what' must be a character string or a function
-```
-
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 

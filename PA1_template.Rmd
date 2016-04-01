@@ -1,5 +1,8 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    keep_md: yes
 ---
 COURSERA REVIEWER: please see figures folder if the plots do not display in your browser. Thanks!
 Connect with me on Linkedin: https://www.linkedin.com/in/hadrien-dykiel-29a78432
